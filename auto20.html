@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<title>Cotizacion de valores</title>
+<style>
+table, td{
+	border:solid black 1px;
+}
+#cabezal, #resultado{
+	text-align:center;
+	font-weight:bold;
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+var datos = {
+	"empresas":[
+		{cod:"ACS", nom:"ACS", cot: 0},
+		{cod:"ANA", nom:"Acciona", cot: 0},
+		{cod:"ELE", nom:"Endesa", cot: 0},
+		{cod:"FCC", nom:"Fomento de Const", cot: 0},
+		{cod:"FER", nom:"Grupo Ferrovial", cot: 0},
+		{cod:"GAS", nom:"Gas Natural", cot: 0},
+		{cod:"IDR", nom:"Indra Sistemas", cot: 0},
+		{cod:"ITX", nom:"Inditex", cot: 0},
+		{cod:"JAZ", nom:"Jazztel", cot: 0},
+		{cod:"MAP", nom:"Mapfre", cot: 0},
+		{cod:"REP", nom:"Repsol", cot: 0},
+		{cod:"SAN", nom:"Banco Santander", cot: 0}
+	]
+}
+$(document).ready(function(){
+		
+	$("#info").html("<br><table id='tabla'><tr id='cabezal'><td>Empresa</td><td>C&oacute;digo</td>"+
+	  "<td>Cotizaci&oacute;n</td><td>T&iacute;tulos</td></tr></table>");
+	recuperar_cotizacion(false);
+	$("#actualizar").click(fechData);
+	
+	/*definimos una función para actualizar datos*/
+	function fechData(){
+			recuperar_cotizacion(true);
+			console.log("Actualizado");
+	}
+	
+	/*usamos setTimeout(foo, x) para que se
+	ejecute cada foo cada x tiempo (milisegundos como parámetro)*/
+	setInterval(fechData, 2000);
+});
+
+function recuperar_cotizacion(actualizar){
+	var query = [];
+	for(i = 0;i < datos.empresas.length;i++) query.push(datos.empresas[i].cod);
+	getInfo(query, actualizar);	
+	if(!actualizar) $("#info").append("<br><input type='button' id='actualizar' value='Actualizar'/><br><br>");
+}
+
+function getInfo(q, actualizar){
+	$.getJSON('cotizacionLocal?cod=' + q.join())
+	.done(function(response){
+		var c = 0;
+		for(var stock in response[0].empresas[0]){
+			var stockInfo = response[0].empresas[0][stock][0];	
+			datos.empresas[c].cot = stockInfo.msg;
+			if(actualizar){
+				$("#celda_" + datos.empresas[c].cod).html(stockInfo.msg);
+			}
+			else{
+				$("#tabla").append("<tr><td>" + stock + "(" + datos.empresas[c].nom + ")</td><td>" +
+				  stock + "</td><td id='celda_"+datos.empresas[c].cod+"'>" + stockInfo.msg + "</td><td><input type='number' id='" +
+				  stock + "' value='0'></td></tr>");
+			}
+			c++;
+		}	
+	})
+	.fail(function( jqxhr, textStatus, error ) {
+	    var err = jqxhr.responseText.replace(",", "\n");
+	    alert("Error " + jqxhr.status + "\n\nLas siguientes empresas no existen: \n\n" + err +
+	      "\n\nElimínalas del objeto DATOS");
+	});
+}
+
+</script>
+</head>
+<body>
+<h1>Cotizaci&oacute;n de valores</h1>
+<div id="info"></div>
+</body>
+</html>
